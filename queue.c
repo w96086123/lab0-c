@@ -54,6 +54,7 @@ bool q_insert_head(struct list_head *head, char *s)
     // Check
     if (new_element == NULL) {
         // Memory allocated failed
+        free(new_element);
         return false;
     }
 
@@ -105,18 +106,21 @@ bool q_insert_tail(struct list_head *head, char *s)
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
     // Is this queue empty
-    if (list_empty(head)) {
-        return (NULL);
+    if (!head) {
+        free(head);
+        return NULL;
     }
 
     // Get first element from the queue
     element_t *remove_element = list_first_entry(head, element_t, list);
 
-    // Copy the value to sp
-    strncpy(sp, remove_element->value, bufsize);
+    if (remove_element) {
+        // Copy the value to sp
+        strncpy(sp, remove_element->value, bufsize);
 
-    // Remove the element from the queue
-    list_del(&remove_element->list);
+        // Remove the element from the queue
+        list_del(&remove_element->list);
+    }
 
     return remove_element;
 }
@@ -196,7 +200,35 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
-    return true;
+
+    // If queue is empty or one node, we can return true
+    if (!head || !head->next)
+        return true;
+
+    struct list_head *current = head->next;
+    struct list_head *prev = head;
+
+    // If the queue have duplicate value, this value will become true
+    bool dup = false;
+
+    while (current) {
+        element_t *current_node = list_entry(current, element_t, list);
+        element_t *prev_node = list_entry(prev, element_t, list);
+
+        if (current_node->value == prev_node->value) {
+            dup = true;
+            // Remove current node and prev->next point to current->next
+            struct list_head *temp = current;
+            current = current->next;
+            prev->next = current;
+            list_del(temp);
+        } else {
+            prev = current;
+            current = current->next;
+        }
+    }
+
+    return dup;
 }
 
 /* Swap every two adjacent nodes */
