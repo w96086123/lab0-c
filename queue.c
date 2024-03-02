@@ -129,7 +129,7 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
         return (NULL);
     }
 
-    // Get first element from the queue
+    // Get last element from the queue
     element_t *remove_element = list_last_entry(head, element_t, list);
 
     // Copy the value to sp
@@ -159,6 +159,36 @@ int q_size(struct list_head *head)
 bool q_delete_mid(struct list_head *head)
 {
     // https://leetcode.com/problems/delete-the-middle-node-of-a-linked-list/
+
+    // Is this a empty queue
+    if (!head)
+        return false;
+
+    // Get queue size and middle index
+    int size = q_size(head);
+    int mid = size / 2;
+
+    struct list_head *li, *tmp;
+    element_t *mid_node = NULL;
+
+    int index = 0;
+    // Find middle node
+    list_for_each_safe (li, tmp, head) {
+        if (index == mid) {
+            mid_node = list_entry(li, element_t, list);
+            break;
+        }
+        index++;
+    }
+
+    // Check middle node is exist
+    if (!mid_node)
+        return false;
+
+    // Delete middle node from the queue
+    list_del(li);
+    free(mid_node);
+
     return true;
 }
 
