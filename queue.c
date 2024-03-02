@@ -37,7 +37,6 @@ void q_free(struct list_head *head)
 
     // Traverse the list safely
     list_for_each_safe (current, next, head) {
-
         // Delete the node from the list
         list_del(current);
 
@@ -49,6 +48,29 @@ void q_free(struct list_head *head)
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
+    // Create a new element
+    element_t *new_element = (element_t *) malloc(sizeof(element_t));
+
+    // Check
+    if (new_element == NULL) {
+        // Memory allocated failed
+        return false;
+    }
+
+
+    // Write s to new element's value
+    new_element->value = strdup(s);
+
+    // Check
+    if (new_element->value == NULL) {
+        // String copied failed
+        free(new_element);
+        return false;
+    }
+
+    // New element insert to list head
+    list_add(&new_element->list, head);
+
     return true;
 }
 
