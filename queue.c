@@ -124,7 +124,21 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    return NULL;
+    // Is this queue empty
+    if (list_empty(head)) {
+        return (NULL);
+    }
+
+    // Get first element from the queue
+    element_t *remove_element = list_last_entry(head, element_t, list);
+
+    // Copy the value to sp
+    strncpy(sp, remove_element->value, bufsize);
+
+    // Remove the element from the queue
+    list_del(&remove_element->list);
+
+    return remove_element;
 }
 
 /* Return number of elements in queue */
