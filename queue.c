@@ -14,7 +14,20 @@
 /* Create an empty queue */
 struct list_head *q_new()
 {
-    return NULL;
+    /* Allocate memory dynamically for new list_head */
+    struct list_head *new_head =
+        (struct list_head *) malloc(sizeof(struct list_head));
+
+    /* Check if memory allocation was successful */
+    if (new_head == NULL) {
+        /* Allocation failed, return NULL */
+        return NULL;
+    }
+
+    /* Initialize the new list_head to point to itself, indicating empty queue
+     */
+    INIT_LIST_HEAD(new_head);
+    return new_head;
 }
 
 /* Free all storage used by queue */
@@ -47,7 +60,15 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 /* Return number of elements in queue */
 int q_size(struct list_head *head)
 {
-    return -1;
+    if (!head)
+        return 0;
+
+    int len = 0;
+    struct list_head *li;
+
+    list_for_each (li, head)
+        len++;
+    return len;
 }
 
 /* Delete the middle node in queue */
