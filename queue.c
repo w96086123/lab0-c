@@ -31,7 +31,20 @@ struct list_head *q_new()
 }
 
 /* Free all storage used by queue */
-void q_free(struct list_head *head) {}
+void q_free(struct list_head *head)
+{
+    struct list_head *current, *next;  // Pointers for traversing the list
+
+    // Traverse the list safely
+    list_for_each_safe (current, next, head) {
+
+        // Delete the node from the list
+        list_del(current);
+
+        // Free the memory allocated for the current
+        free(current);
+    }
+}
 
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
