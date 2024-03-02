@@ -222,6 +222,8 @@ bool q_delete_dup(struct list_head *head)
             current = current->next;
             prev->next = current;
             list_del(temp);
+            free(temp);
+            free(current_node);
         } else {
             prev = current;
             current = current->next;
