@@ -15,11 +15,10 @@
 struct list_head *q_new()
 {
     /* Allocate memory dynamically for new list_head */
-    struct list_head *new_head =
-        (struct list_head *) malloc(sizeof(struct list_head));
+    struct list_head *new_head = malloc(sizeof(struct list_head));
 
     /* Check if memory allocation was successful */
-    if (new_head == NULL) {
+    if (!new_head) {
         /* Allocation failed, return NULL */
         return NULL;
     }
@@ -43,13 +42,14 @@ void q_free(struct list_head *head)
         // Free the memory allocated for the current
         free(current);
     }
+    free(head);
 }
 
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
     // Create a new element
-    element_t *new_element = (element_t *) malloc(sizeof(element_t));
+    element_t *new_element = malloc(sizeof(element_t));
 
     // Check
     if (new_element == NULL) {
@@ -107,7 +107,6 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
     // Is this queue empty
     if (list_empty(head)) {
-        free(head);
         return NULL;
     }
 
@@ -121,7 +120,7 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
         sp[bufsize - 1] = '\0';
 
         // Remove the element from the queue
-        list_del(head->next);
+        list_del(&remove_element->list);
     }
 
     return remove_element;
