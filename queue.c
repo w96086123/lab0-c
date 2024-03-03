@@ -78,6 +78,9 @@ bool q_insert_head(struct list_head *head, char *s)
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
+    if (!head)
+        return false;
+
     // Create a new element
     element_t *new_element = (element_t *) malloc(sizeof(element_t));
 
@@ -131,18 +134,16 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
     // Is this queue empty
     if (list_empty(head)) {
-        free(head);
         return NULL;
     }
 
-
-
-    // Get last element from the queue
+    // Get first element from the queue
     element_t *remove_element = list_last_entry(head, element_t, list);
 
     if (remove_element) {
         // Copy the value to sp
-        strncpy(sp, remove_element->value, bufsize);
+        memcpy(sp, remove_element->value, bufsize);
+        sp[bufsize - 1] = '\0';
 
         // Remove the element from the queue
         list_del(&remove_element->list);
@@ -174,30 +175,23 @@ bool q_delete_mid(struct list_head *head)
     if (!head)
         return false;
 
-    // Get queue size and middle index
-    int size = q_size(head);
-    int mid = size / 2;
+    // Use fast and slow pointer
+    struct list_head *slow = head, *fast = head;
 
-    struct list_head *li, *tmp;
-    element_t *mid_node = NULL;
-
-    int index = 0;
-    // Find middle node
-    list_for_each_safe (li, tmp, head) {
-        if (index == mid) {
-            mid_node = list_entry(li, element_t, list);
-            break;
-        }
-        index++;
+    while (fast->next != head && fast->next->next != head) {
+        fast = fast->next->next;
+        slow = slow->next;
     }
 
+    element_t *mid = list_entry(slow->next, element_t, list);
+
     // Check middle node is exist
-    if (!mid_node)
+    if (!mid)
         return false;
 
     // Delete middle node from the queue
-    list_del(li);
-    free(mid_node);
+    list_del(slow->next);
+    q_release_element(mid);
 
     return true;
 }
