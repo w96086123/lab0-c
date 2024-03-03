@@ -106,20 +106,22 @@ bool q_insert_tail(struct list_head *head, char *s)
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
     // Is this queue empty
-    if (!head) {
+    if (list_empty(head)) {
         free(head);
         return NULL;
     }
+
 
     // Get first element from the queue
     element_t *remove_element = list_first_entry(head, element_t, list);
 
     if (remove_element) {
         // Copy the value to sp
-        strncpy(sp, remove_element->value, bufsize);
+        memcpy(sp, remove_element->value, bufsize);
+        sp[bufsize - 1] = '\0';
 
         // Remove the element from the queue
-        list_del(&remove_element->list);
+        list_del(head->next);
     }
 
     return remove_element;
@@ -130,17 +132,22 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
     // Is this queue empty
     if (list_empty(head)) {
-        return (NULL);
+        free(head);
+        return NULL;
     }
+
+
 
     // Get last element from the queue
     element_t *remove_element = list_last_entry(head, element_t, list);
 
-    // Copy the value to sp
-    strncpy(sp, remove_element->value, bufsize);
+    if (remove_element) {
+        // Copy the value to sp
+        strncpy(sp, remove_element->value, bufsize);
 
-    // Remove the element from the queue
-    list_del(&remove_element->list);
+        // Remove the element from the queue
+        list_del(&remove_element->list);
+    }
 
     return remove_element;
 }
@@ -217,7 +224,7 @@ bool q_delete_dup(struct list_head *head)
 
         if (current_node->value == prev_node->value) {
             dup = true;
-            // Remove current node and prev->next point to current->next
+            // Delete current node and prev->next point to current->next
             struct list_head *temp = current;
             current = current->next;
             prev->next = current;
@@ -237,6 +244,29 @@ bool q_delete_dup(struct list_head *head)
 void q_swap(struct list_head *head)
 {
     // https://leetcode.com/problems/swap-nodes-in-pairs/
+
+    if (!head || !head->next)
+        return;
+
+    struct list_head *current = head->next;
+    struct list_head *pre = head;
+
+    while (current && current->next) {
+        struct list_head *next_pair = current->next->next;
+
+        pre->next = current->next;
+        current->next->prev = pre;
+
+        current->next = next_pair;
+        if (next_pair)
+            next_pair->prev = current;
+
+        pre->prev = current;
+        current->prev = NULL;
+
+        pre = current;
+        current = next_pair;
+    }
 }
 
 /* Reverse elements in queue */
