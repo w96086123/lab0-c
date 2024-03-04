@@ -20,6 +20,7 @@ struct list_head *q_new()
     /* Check if memory allocation was successful */
     if (!new_head) {
         /* Allocation failed, return NULL */
+        free(new_head);
         return NULL;
     }
 
@@ -48,22 +49,21 @@ void q_free(struct list_head *head)
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
+    if (!head)
+        return false;
+
     // Create a new element
     element_t *new_element = malloc(sizeof(element_t));
 
-    // Check
-    if (new_element == NULL) {
-        // Memory allocated failed
-        free(new_element);
+    if (!new_element) {
         return false;
     }
-
 
     // Copy s to new element's value
     new_element->value = strdup(s);
 
     // Check
-    if (new_element->value == NULL) {
+    if (!new_element->value) {
         // String copied failed
         free(new_element);
         return false;
@@ -82,11 +82,9 @@ bool q_insert_tail(struct list_head *head, char *s)
         return false;
 
     // Create a new element
-    element_t *new_element = (element_t *) malloc(sizeof(element_t));
+    element_t *new_element = malloc(sizeof(element_t));
 
-    // Check
-    if (new_element == NULL) {
-        // Memory allocated failed
+    if (!new_element) {
         return false;
     }
 
@@ -94,7 +92,7 @@ bool q_insert_tail(struct list_head *head, char *s)
     new_element->value = strdup(s);
 
     // Check
-    if (new_element->value == NULL) {
+    if (!new_element->value) {
         // String copied failed
         free(new_element);
         return false;
@@ -178,11 +176,13 @@ bool q_delete_mid(struct list_head *head)
     // Use fast and slow pointer
     struct list_head *slow = head, *fast = head;
 
+    // Find to middle node
     while (fast->next != head && fast->next->next != head) {
         fast = fast->next->next;
         slow = slow->next;
     }
 
+    // Entry middle node
     element_t *mid = list_entry(slow->next, element_t, list);
 
     // Check middle node is exist
@@ -241,24 +241,12 @@ void q_swap(struct list_head *head)
     if (!head || !head->next)
         return;
 
-    struct list_head *current = head->next;
-    struct list_head *pre = head;
-
-    while (current && current->next) {
-        struct list_head *next_pair = current->next->next;
-
-        pre->next = current->next;
-        current->next->prev = pre;
-
-        current->next = next_pair;
-        if (next_pair)
-            next_pair->prev = current;
-
-        pre->prev = current;
-        current->prev = NULL;
-
-        pre = current;
-        current = next_pair;
+    struct list_head *current, *pre;
+    // Initialization
+    for (pre = head->next, current = pre->next; pre != head && current != head;
+         pre = pre->next, current = pre->next) {
+        // Move pre to current
+        list_move(pre, current);
     }
 }
 
