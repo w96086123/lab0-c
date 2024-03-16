@@ -299,13 +299,70 @@ void q_reverseK(struct list_head *head, int k)
     }
 }
 
+
+void merge_list(struct list_head *first_list, struct list_head *second_list)
+{
+    // Prepare empty list to store the result
+    struct list_head result;
+    INIT_LIST_HEAD(&result);
+    // Merge second list into first list until one is empty
+    while (!list_empty(first_list) && !list_empty(second_list)) {
+        element_t *first_element =
+            list_entry(first_list->next, element_t, list);
+        element_t *second_element =
+            list_entry(second_list->next, element_t, list);
+        if (first_element->value <= second_element->value) {
+            list_move_tail(first_list->next, &result);
+        } else {
+            list_move_tail(second_list->next, &result);
+        }
+    }
+    // If first list isn't empty, it will append to tail
+    if (list_empty(first_list)) {
+        list_splice_tail_init(first_list, &result);
+    }
+    // If second list isn't empty, it will append to tail
+    if (list_empty(second_list)) {
+        list_splice_tail_init(second_list, &result);
+    }
+    list_splice_tail_init(&result, first_list);
+}
+
+void merge_sort(struct list_head *head)
+{
+    if (!head || list_empty(head) || list_is_singular(head)) {
+        return;
+    }
+
+    struct list_head new_head;
+    INIT_LIST_HEAD(&new_head);
+
+    // Use fast and slow pointer
+    struct list_head *slow = head, *fast = head;
+
+    // Find to middle node
+    while (fast->next != head && fast->next->next != head) {
+        fast = fast->next->next;
+        slow = slow->next;
+    }
+
+
+    list_cut_position(&new_head, head, slow);
+    merge_sort(head);
+    merge_sort(&new_head);
+    merge_list(head, &new_head);
+}
+
+
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend)
 {
-    // if (descend)
-    //     q_reverse(head)
+    // Use merge sorting
+    merge_sort(head);
 
-    // return;
+    if (descend) {
+        q_reverse(head);
+    }
 }
 
 /* Remove every node which has a node with a strictly less value anywhere to
@@ -324,34 +381,7 @@ int q_descend(struct list_head *head)
     return 0;
 }
 
-void merge_list(struct list_head *first_list, struct list_head *second_list)
-{
-    // Prepare empty list to store the result
-    struct list_head result;
-    INIT_LIST_HEAD(&result);
-    // Merge second list into first list until one is empty
-    while (!list_empty(first_list) && !list_empty(second_list)) {
-        element_t *first_element =
-            list_entry(first_list->next, element_t, list);
-        element_t *second_element =
-            list_entry(second_list->next, element_t, list);
 
-        if (first_element->value <= second_element->value) {
-            list_move_tail(first_list->next, &result);
-        } else {
-            list_move_tail(second_list->next, &result);
-        }
-    }
-    // If first list isn't empty, it will append to tail
-    if (list_empty(first_list)) {
-        list_splice_tail_init(first_list, &result);
-    }
-    // If second list isn't empty, it will append to tail
-    if (list_empty(second_list)) {
-        list_splice_tail_init(second_list, &result);
-    }
-    list_splice_tail_init(&result, first_list);
-}
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
  * order */    /* code */
