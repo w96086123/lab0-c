@@ -36,15 +36,11 @@ void q_free(struct list_head *head)
     if (!head)
         return;
 
-    struct list_head *current, *next;  // Pointers for traversing the list
+    element_t *current, *next;  // Pointers for traversing the list
 
     // Traverse the list safely
-    list_for_each_safe (current, next, head) {
-        // Delete the node from the list
-        list_del(current);
-
-        // Free the memory allocated for the current
-        free(current);
+    list_for_each_entry_safe (current, next, head, list) {
+        q_release_element(current);
     }
     free(head);
 }
