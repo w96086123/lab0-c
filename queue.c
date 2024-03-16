@@ -336,7 +336,7 @@ void merge_list(struct list_head *first_list, struct list_head *second_list)
         element_t *second_element =
             list_entry(second_list->next, element_t, list);
 
-        if (first_element->value > second_element->value) {
+        if (first_element->value <= second_element->value) {
             list_move_tail(first_list->next, &result);
         } else {
             list_move_tail(second_list->next, &result);
@@ -373,6 +373,8 @@ int q_merge(struct list_head *head, bool descend)
     }
 
     int contex_size = q_size(contex_cur->q);
-    q_sort(contex_cur->q, descend);
+    if (descend) {
+        q_reverse(list_cur)
+    }
     return contex_size;
 }
