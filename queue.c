@@ -281,6 +281,7 @@ void q_reverseK(struct list_head *head, int k)
     struct list_head *next = NULL;
     struct list_head *reverseHead = head;
 
+    // Get number of group
     int num = q_size(head) / k;
     int count = k - 1;
 
@@ -299,7 +300,13 @@ void q_reverseK(struct list_head *head, int k)
 }
 
 /* Sort elements of queue in ascending/descending order */
-void q_sort(struct list_head *head, bool descend) {}
+void q_sort(struct list_head *head, bool descend)
+{
+    // if (descend)
+    //     q_reverse(head)
+
+    // return;
+}
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
@@ -317,10 +324,55 @@ int q_descend(struct list_head *head)
     return 0;
 }
 
+void merge_list(struct list_head *first_list, struct list_head *second_list)
+{
+    // Prepare empty list to store the result
+    struct list_head result;
+    INIT_LIST_HEAD(&result);
+    // Merge second list into first list until one is empty
+    while (!list_empty(first_list) && !list_empty(second_list)) {
+        element_t *first_element =
+            list_entry(first_list->next, element_t, list);
+        element_t *second_element =
+            list_entry(second_list->next, element_t, list);
+
+        if (first_element->value > second_element->value) {
+            list_move_tail(first_list->next, &result);
+        } else {
+            list_move_tail(second_list->next, &result);
+        }
+    }
+    // If first list isn't empty, it will append to tail
+    if (list_empty(first_list)) {
+        list_splice_tail_init(first_list, &result);
+    }
+    // If second list isn't empty, it will append to tail
+    if (list_empty(second_list)) {
+        list_splice_tail_init(second_list, &result);
+    }
+    list_splice_tail_init(&result, first_list);
+}
+
 /* Merge all the queues into one sorted queue, which is in ascending/descending
  * order */
 int q_merge(struct list_head *head, bool descend)
 {
     // https://leetcode.com/problems/merge-k-sorted-lists/
-    return 0;
+
+    struct list_head *list_cur = head->next;
+    struct list_head *list_next = list_cur->next;
+
+    queue_contex_t *contex_cur = list_entry(list_cur, queue_contex_t, chain);
+
+    while (list_next != head) {
+        queue_contex_t *contex_next =
+            list_entry(list_next, queue_contex_t, chain);
+        contex_next = list_entry(list_next, queue_contex_t, chain);
+        merge_list(contex_cur->q, contex_next->q);
+        list_next = list_next->next;
+    }
+
+    int contex_size = q_size(contex_cur->q);
+    q_sort(contex_cur->q, descend);
+    return contex_size;
 }
