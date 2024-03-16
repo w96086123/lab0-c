@@ -354,7 +354,8 @@ void merge_list(struct list_head *first_list, struct list_head *second_list)
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
- * order */
+ * order */    /* code */
+
 int q_merge(struct list_head *head, bool descend)
 {
     // https://leetcode.com/problems/merge-k-sorted-lists/
@@ -374,7 +375,7 @@ int q_merge(struct list_head *head, bool descend)
 
     int contex_size = q_size(contex_cur->q);
     if (descend) {
-        q_reverse(list_cur)
+        q_reverse(list_cur);
     }
     return contex_size;
 }
