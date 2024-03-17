@@ -295,70 +295,84 @@ void q_reverseK(struct list_head *head, int k)
     }
 }
 
-
-void merge_list(struct list_head *first_list, struct list_head *second_list)
+int cmp(const char *a, const char *b, bool descend)
 {
-    // Prepare empty list to store the result
-    struct list_head result;
-    INIT_LIST_HEAD(&result);
-    // Merge second list into first list until one is empty
-    while (!list_empty(first_list) && !list_empty(second_list)) {
-        element_t *first_element =
-            list_entry(first_list->next, element_t, list);
-        element_t *second_element =
-            list_entry(second_list->next, element_t, list);
-        if (first_element->value <= second_element->value) {
-            list_move_tail(first_list->next, &result);
-        } else {
-            list_move_tail(second_list->next, &result);
-        }
+    if (descend) {
+        return (strcmp(b, a));
+    } else {
+        return (strcmp(a, b));
     }
-    // If first list isn't empty, it will append to tail
-    if (list_empty(first_list)) {
-        list_splice_tail_init(first_list, &result);
-    }
-    // If second list isn't empty, it will append to tail
-    if (list_empty(second_list)) {
-        list_splice_tail_init(second_list, &result);
-    }
-    list_splice_tail_init(&result, first_list);
 }
 
-void merge_sort(struct list_head *head)
+struct list_head *merge_list(struct list_head *first_list,
+                             struct list_head *second_list,
+                             bool descend)
 {
-    if (!head || list_empty(head) || list_is_singular(head)) {
-        return;
-    }
+    // Prepare empty list to store the result
+    LIST_HEAD(result);
+    INIT_LIST_HEAD(&result);
+    struct list_head *tmp = &result;
+    // Merge second list into first list until one is empty
+    while (first_list && second_list) {
+        element_t *first_element = list_entry(first_list, element_t, list);
+        element_t *second_element = list_entry(second_list, element_t, list);
 
-    struct list_head new_head;
-    INIT_LIST_HEAD(&new_head);
+        if (cmp(first_element->value, second_element->value, descend) < 0) {
+            tmp->next = first_list;
+            first_list = first_list->next;
+        } else {
+            tmp->next = second_list;
+            second_list = second_list->next;
+        }
+        tmp = tmp->next;
+    }
+    // Set tmp->next to either first_list or second_list depending on whether
+    // first_list is not NULL
+    tmp->next = first_list ? first_list : second_list;
+
+    return result.next;
+}
+
+struct list_head *merge_sort(struct list_head *head, bool descend)
+{
+    if (!head || !head->next)
+        return head;
 
     // Use fast and slow pointer
-    struct list_head *slow = head, *fast = head;
+    struct list_head *slow = head, *fast = head->next, *new_head;
 
     // Find to middle node
-    while (fast->next != head && fast->next->next != head) {
+    while (fast && fast->next) {
         fast = fast->next->next;
         slow = slow->next;
     }
+    // Split
+    new_head = slow->next;
+    slow->next = NULL;
+    // Merge
+    head = merge_sort(head, descend);
+    new_head = merge_sort(new_head, descend);
 
-
-    list_cut_position(&new_head, head, slow);
-    merge_sort(head);
-    merge_sort(&new_head);
-    merge_list(head, &new_head);
+    return merge_list(head, new_head, descend);
 }
 
 
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend)
 {
-    // Use merge sorting
-    merge_sort(head);
+    if (!head || list_empty(head))
+        return;
 
-    if (descend) {
-        q_reverse(head);
+    struct list_head *list = head->next, *pre, *node;
+    head->prev->next = NULL;
+    head->next = merge_sort(list, descend);
+
+    for (pre = head, node = head->next; node->next != NULL;
+         pre = node, node = node->next) {
+        node->prev = pre;
     }
+    node->next = head;
+    head->prev = node;
 }
 
 /* Remove every node which has a node with a strictly less value anywhere to
@@ -395,7 +409,7 @@ int q_merge(struct list_head *head, bool descend)
         queue_contex_t *contex_next =
             list_entry(list_next, queue_contex_t, chain);
         contex_next = list_entry(list_next, queue_contex_t, chain);
-        merge_list(contex_cur->q, contex_next->q);
+        merge_list(contex_cur->q, contex_next->q, descend);
         list_next = list_next->next;
     }
 
