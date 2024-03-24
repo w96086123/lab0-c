@@ -304,56 +304,54 @@ int cmp(const char *a, const char *b, bool descend)
     }
 }
 
-struct list_head *merge_list(struct list_head *first_list,
-                             struct list_head *second_list,
-                             bool descend)
+void merge_list(struct list_head *result,
+                struct list_head *first_list,
+                struct list_head *second_list,
+                bool descend)
 {
-    // Prepare empty list to store the result
-    LIST_HEAD(result);
-    INIT_LIST_HEAD(&result);
-    struct list_head *tmp = &result;
     // Merge second list into first list until one is empty
-    while (first_list && second_list) {
-        element_t *first_element = list_entry(first_list, element_t, list);
-        element_t *second_element = list_entry(second_list, element_t, list);
-
+    while (!list_empty(first_list) && !list_empty(second_list)) {
+        element_t *first_element =
+            list_entry(first_list->next, element_t, list);
+        element_t *second_element =
+            list_entry(second_list->next, element_t, list);
         if (cmp(first_element->value, second_element->value, descend) < 0) {
-            tmp->next = first_list;
-            first_list = first_list->next;
+            list_move_tail(first_list->next, result);
         } else {
-            tmp->next = second_list;
-            second_list = second_list->next;
+            list_move_tail(second_list->next, result);
         }
-        tmp = tmp->next;
     }
     // Set tmp->next to either first_list or second_list depending on whether
     // first_list is not NULL
-    tmp->next = first_list ? first_list : second_list;
-
-    return result.next;
+    if (!list_empty(first_list)) {
+        list_splice_tail_init(first_list, result);
+    } else {
+        list_splice_tail_init(second_list, result);
+    }
 }
 
-struct list_head *merge_sort(struct list_head *head, bool descend)
+void merge_sort(struct list_head *head, bool descend)
 {
-    if (!head || !head->next)
-        return head;
+    if (!head || list_empty(head) || list_is_singular(head))
+        return;
 
     // Use fast and slow pointer
-    struct list_head *slow = head, *fast = head->next, *new_head;
-
-    // Find to middle node
-    while (fast && fast->next) {
-        fast = fast->next->next;
+    struct list_head *slow, *fast;
+    for (slow = head->next, fast = slow; fast != head && fast->next != head;
+         fast = fast->next->next) {
         slow = slow->next;
     }
     // Split
-    new_head = slow->next;
-    slow->next = NULL;
-    // Merge
-    head = merge_sort(head, descend);
-    new_head = merge_sort(new_head, descend);
+    LIST_HEAD(left_head);
+    LIST_HEAD(mid_head);
+    list_cut_position(&left_head, head, slow->prev);
+    list_splice(head, &mid_head);
+    INIT_LIST_HEAD(head);
 
-    return merge_list(head, new_head, descend);
+    merge_sort(&left_head, descend);
+    merge_sort(&mid_head, descend);
+    // Merge
+    merge_list(head, &left_head, &mid_head, descend);
 }
 
 
@@ -362,17 +360,7 @@ void q_sort(struct list_head *head, bool descend)
 {
     if (!head || list_empty(head))
         return;
-
-    struct list_head *list = head->next, *pre, *node;
-    head->prev->next = NULL;
-    head->next = merge_sort(list, descend);
-
-    for (pre = head, node = head->next; node->next != NULL;
-         pre = node, node = node->next) {
-        node->prev = pre;
-    }
-    node->next = head;
-    head->prev = node;
+    merge_sort(head, descend);
 }
 
 /* Remove every node which has a node with a strictly less value anywhere to
@@ -395,27 +383,34 @@ int q_descend(struct list_head *head)
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
  * order */    /* code */
-
+// https://github.com/ShawnXuanc/lab0-c/blob/master/queue.c
 int q_merge(struct list_head *head, bool descend)
 {
-    // https://leetcode.com/problems/merge-k-sorted-lists/
+    // // https://leetcode.com/problems/merge-k-sorted-lists/
+    // if(!head || list_empty(head))
+    //     return 0;
 
-    struct list_head *list_cur = head->next;
-    struct list_head *list_next = list_cur->next;
+    // int size = 0;
 
-    queue_contex_t *contex_cur = list_entry(list_cur, queue_contex_t, chain);
+    // struct list_head *result = NULL, *node, *pre, *list_next = head->next;
 
-    while (list_next != head) {
-        queue_contex_t *contex_next =
-            list_entry(list_next, queue_contex_t, chain);
-        contex_next = list_entry(list_next, queue_contex_t, chain);
-        merge_list(contex_cur->q, contex_next->q, descend);
-        list_next = list_next->next;
-    }
+    // while (list_next != head) {
+    //     queue_contex_t *contex_next = list_entry(list_next, queue_contex_t,
+    //     chain); size += contex_next->size; contex_next->q->prev->next = NULL;
 
-    int contex_size = q_size(contex_cur->q);
-    if (descend) {
-        q_reverse(list_cur);
-    }
-    return contex_size;
+    //     result = merge_list(result, contex_next->q->next, descend);
+    //     list_next = list_next->next;
+    //     INIT_LIST_HEAD(contex_next->q);
+    // }
+
+    // LIST_HEAD(list);
+    // list.next = result;
+    // for (pre = &list, node = list.next; node->next != NULL;
+    //      pre = node, node = node->next) {
+    //     node->prev = pre;
+    // }
+    // node->next = &list;
+    // list.prev = node;
+    // list_splice(&list, list_first_entry(head, queue_contex_t, chain)->q);
+    return 0;
 }
