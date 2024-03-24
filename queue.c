@@ -201,35 +201,30 @@ bool q_delete_dup(struct list_head *head)
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
 
     // If queue is empty or one node, we can return true
-    if (!head || !head->next)
+    if (!head)
+        return false;
+    if (list_empty(head) || list_is_singular(head))
         return true;
-
-    struct list_head *current = head->next;
-    struct list_head *prev = head;
 
     // If the queue have duplicate value, this value will become true
     bool dup = false;
-
-    while (current) {
-        element_t *current_node = list_entry(current, element_t, list);
-        element_t *prev_node = list_entry(prev, element_t, list);
-
-        if (current_node->value == prev_node->value) {
+    element_t *cur, *next;
+    list_for_each_entry_safe (cur, next, head, list) {
+        if (&next->list != head && strcmp(cur->value, next->value) == 0) {
             dup = true;
-            // Delete current node and prev->next point to current->next
-            struct list_head *temp = current;
-            current = current->next;
-            prev->next = current;
-            list_del(temp);
-            free(temp);
-            free(current_node);
-        } else {
-            prev = current;
-            current = current->next;
+            list_del(&cur->list);
+            free(cur->value);
+            free(cur);
+        } else if (dup) {
+            dup = false;
+            list_del(&cur->list);
+            free(cur->value);
+            free(cur);
         }
     }
 
-    return dup;
+
+    return true;
 }
 
 /* Swap every two adjacent nodes */
@@ -362,6 +357,8 @@ void q_sort(struct list_head *head, bool descend)
         return;
     merge_sort(head, descend);
 }
+
+
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
