@@ -386,31 +386,27 @@ int q_descend(struct list_head *head)
 // https://github.com/ShawnXuanc/lab0-c/blob/master/queue.c
 int q_merge(struct list_head *head, bool descend)
 {
-    // // https://leetcode.com/problems/merge-k-sorted-lists/
-    // if(!head || list_empty(head))
-    //     return 0;
+    // https://leetcode.com/problems/merge-k-sorted-lists/
+    if (!head || list_empty(head))
+        return 0;
 
-    // int size = 0;
+    int size = 0;
+    LIST_HEAD(result);
+    INIT_LIST_HEAD(&result);
 
-    // struct list_head *result = NULL, *node, *pre, *list_next = head->next;
+    struct list_head *list_next = head->next->next;
+    struct list_head *first = head->next;
+    while (list_next != head) {
+        queue_contex_t *first_context =
+            list_entry(first, queue_contex_t, chain);
+        queue_contex_t *contex_next =
+            list_entry(list_next, queue_contex_t, chain);
+        size += contex_next->size;
 
-    // while (list_next != head) {
-    //     queue_contex_t *contex_next = list_entry(list_next, queue_contex_t,
-    //     chain); size += contex_next->size; contex_next->q->prev->next = NULL;
+        merge_list(&result, first_context->q, contex_next->q, descend);
+        list_splice_init(&result, first_context->q);
+        list_next = list_next->next;
+    }
 
-    //     result = merge_list(result, contex_next->q->next, descend);
-    //     list_next = list_next->next;
-    //     INIT_LIST_HEAD(contex_next->q);
-    // }
-
-    // LIST_HEAD(list);
-    // list.next = result;
-    // for (pre = &list, node = list.next; node->next != NULL;
-    //      pre = node, node = node->next) {
-    //     node->prev = pre;
-    // }
-    // node->next = &list;
-    // list.prev = node;
-    // list_splice(&list, list_first_entry(head, queue_contex_t, chain)->q);
-    return 0;
+    return size;
 }
