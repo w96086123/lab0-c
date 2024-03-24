@@ -358,14 +358,42 @@ void q_sort(struct list_head *head, bool descend)
     merge_sort(head, descend);
 }
 
+int q_descend_or_ascend(struct list_head *head, bool descend)
+{
+    if (!head || list_empty(head))
+        return 0;
 
+    int num = 0;
+    struct list_head *cur = head->prev, *prev = cur->prev;
+    while (prev != head) {
+        num++;
+        element_t *cur_element = list_entry(cur, element_t, list);
+        element_t *prev_element = list_entry(prev, element_t, list);
+        bool del_prev =
+            cmp(cur_element->value, prev_element->value, descend) < 0;
+        if (del_prev) {
+            struct list_head *tmp = prev;
+            prev = prev->prev;
+            list_del(tmp);
+            element_t *tmp_ele = list_entry(tmp, element_t, list);
+            free(tmp_ele->value);
+            free(tmp_ele);
+            num--;
+        } else {
+            cur = prev;
+            prev = prev->prev;
+        }
+    }
+    num++;
+    return num;
+}
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
 int q_ascend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return q_descend_or_ascend(head, false);
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
@@ -373,7 +401,7 @@ int q_ascend(struct list_head *head)
 int q_descend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return q_descend_or_ascend(head, true);
 }
 
 
