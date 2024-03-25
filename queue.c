@@ -364,24 +364,24 @@ int q_descend_or_ascend(struct list_head *head, bool descend)
         return 0;
 
     int num = 0;
-    struct list_head *cur = head->prev, *prev = cur->prev;
-    while (prev != head) {
+    struct list_head *cur = head->prev;
+    char *max = list_entry(cur, element_t, list)->value;
+    cur = cur->prev;
+    while (cur != head) {
         num++;
         element_t *cur_element = list_entry(cur, element_t, list);
-        element_t *prev_element = list_entry(prev, element_t, list);
-        bool del_prev =
-            cmp(cur_element->value, prev_element->value, descend) < 0;
+        bool del_prev = cmp(max, cur_element->value, descend) < 0;
         if (del_prev) {
-            struct list_head *tmp = prev;
-            prev = prev->prev;
+            struct list_head *tmp = cur;
+            cur = cur->prev;
             list_del(tmp);
             element_t *tmp_ele = list_entry(tmp, element_t, list);
             free(tmp_ele->value);
             free(tmp_ele);
             num--;
         } else {
-            cur = prev;
-            prev = prev->prev;
+            max = cur_element->value;
+            cur = cur->prev;
         }
     }
     num++;
